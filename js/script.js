@@ -52,128 +52,91 @@ function createElement(results, typeURL, typeId) {
   });
 }
 
-//* Display movie details
-async function displayMovieDetails() {
+//* Display details (movies/shows)
+async function displayDetails(type) {
   //! Query string
-  const movieId = window.location.search.split('=')[1];
-  const movie = await fetchAPIData(`movie/${movieId}`);
+  const id = window.location.search.split('=')[1];
+  const data = await fetchAPIData(`${type}/${id}`);
 
-  //! Overlay for background image
-  displayBackgroundImage('movie', movie.backdrop_path);
+  //* Overlay for background image
+  displayBackgroundImage(type, data.backdrop_path);
 
   const div = document.createElement('div');
-  div.classList.add('details-top');
 
-  const posterDiv = document.createElement('div');
-  const img = document.createElement('img');
-  img.classList.add('card-img-top');
-  img.alt = movie.title;
+  div.innerHTML = `
+    <div class="details-top">
+      <div>
+        ${
+          data.poster_path
+            ? `<img
+              src="https://image.tmdb.org/t/p/w500${data.poster_path}"
+              class="card-img-top"
+              alt="${data.title || data.name}"
+            />`
+            : `<img
+              src="../images/no-image.jpg"
+              class="card-img-top"
+              alt="${data.title || data.name}"
+            />`
+        }
+      </div>
+      <div>
+        <h2>${data.title || data.name}</h2>
+        <p>
+          <i class="fas fa-star text-primary"></i>
+          ${data.vote_average.toFixed(1)} / 10
+        </p>
+        ${
+          type === 'movie'
+            ? `<p class="text-muted">Release Date: ${data.release_date}</p>`
+            : `<p class="text-muted">Last Air Date: ${data.last_air_date}</p>`
+        }
+        <p>
+          ${data.overview}
+        </p>
+        <h5>Genres</h5>
+        <ul class="list-group">
+          ${data.genres.map((genre) => `<li>${genre.name}</li>`).join('')}
+        </ul>
+        <a href="${data.homepage}" target="_blank" class="btn">Visit ${
+    type === 'movie' ? 'Movie' : 'Show'
+  } Homepage</a>
+      </div>
+    </div>
+    <div class="details-bottom">
+      <h2>${type === 'movie' ? 'Movie' : 'Show'} Info</h2>
+      <ul>
+        ${
+          type === 'movie'
+            ? `<li><span class="text-secondary">Budget:</span> $${addCommasToNumber(
+                data.budget
+              )}</li>
+               <li><span class="text-secondary">Revenue:</span> $${addCommasToNumber(
+                 data.revenue
+               )}</li>
+               <li><span class="text-secondary">Runtime:</span> ${
+                 data.runtime
+               } minutes</li>
+               <li><span class="text-secondary">Status:</span> ${
+                 data.status
+               }</li>`
+            : `<li><span class="text-secondary">Number of Episodes:</span> ${data.number_of_episodes}</li>
+               <li><span class="text-secondary">Last Episode To Air:</span> ${data.last_episode_to_air.name}</li>
+               <li><span class="text-secondary">Status:</span> ${data.status}</li>`
+        }
+      </ul>
+      <h4>Production Companies</h4>
+      <div class="list-group">
+        ${data.production_companies
+          .map((company) => `<span>${company.name}</span>`)
+          .join(', ')}
+      </div>
+    </div>
+  `;
 
-  if (movie.poster_path) {
-    img.src = `https://image.tmdb.org/t/p/w500${movie.poster_path}`;
-  } else {
-    img.src = '../images/no-image.jpg';
-  }
-
-  posterDiv.appendChild(img);
-
-  const detailsDiv = document.createElement('div');
-  const h2 = document.createElement('h2');
-  h2.textContent = movie.title;
-
-  const rating = document.createElement('p');
-  const starIcon = document.createElement('i');
-  starIcon.classList.add('fas', 'fa-star', 'text-primary');
-  rating.appendChild(starIcon);
-  rating.appendChild(
-    document.createTextNode(` ${movie.vote_average.toFixed(1)} / 10`)
-  );
-
-  const releaseDate = document.createElement('p');
-  releaseDate.classList.add('text-muted');
-  releaseDate.textContent = `Release Date: ${movie.release_date}`;
-
-  const overview = document.createElement('p');
-  overview.textContent = movie.overview;
-
-  const genresHeading = document.createElement('h5');
-  genresHeading.textContent = 'Genres';
-
-  const genresList = document.createElement('ul');
-  genresList.classList.add('list-group');
-  movie.genres.forEach((genre) => {
-    const genreItem = document.createElement('li');
-    genreItem.textContent = genre.name;
-    genresList.appendChild(genreItem);
-  });
-
-  const homepageLink = document.createElement('a');
-  homepageLink.href = movie.homepage;
-  homepageLink.target = '_blank';
-  homepageLink.classList.add('btn');
-  homepageLink.textContent = movie.homepage;
-
-  detailsDiv.append(
-    h2,
-    rating,
-    releaseDate,
-    overview,
-    genresHeading,
-    genresList,
-    homepageLink
-  );
-
-  div.append(posterDiv, detailsDiv);
-
-  const bottomDiv = document.createElement('div');
-  bottomDiv.classList.add('details-bottom');
-
-  const movieInfoHeading = document.createElement('h2');
-  movieInfoHeading.textContent = 'Movie Info';
-
-  const infoList = document.createElement('ul');
-  const budgetItem = document.createElement('li');
-  budgetItem.innerHTML = `<span class="text-secondary">Budget:</span> $${addCommasToNumber(
-    movie.budget
-  )}`;
-  infoList.appendChild(budgetItem);
-
-  const revenueItem = document.createElement('li');
-  revenueItem.innerHTML = `<span class="text-secondary">Revenue:</span> $${addCommasToNumber(
-    movie.revenue
-  )}`;
-  infoList.appendChild(revenueItem);
-
-  const runtimeItem = document.createElement('li');
-  runtimeItem.innerHTML = `<span class="text-secondary">Runtime:</span> ${movie.runtime} minutes`;
-  infoList.appendChild(runtimeItem);
-
-  const statusItem = document.createElement('li');
-  statusItem.innerHTML = `<span class="text-secondary">Status:</span> ${movie.status}`;
-  infoList.appendChild(statusItem);
-
-  bottomDiv.append(movieInfoHeading, infoList);
-
-  const productionCompaniesHeading = document.createElement('h4');
-  productionCompaniesHeading.textContent = 'Production Companies';
-
-  const productionCompaniesDiv = document.createElement('div');
-  productionCompaniesDiv.classList.add('list-group');
-  movie.production_companies.forEach((company, index) => {
-    const companySpan = document.createElement('span');
-    companySpan.textContent = `${
-      index !== movie.production_companies.length - 1
-        ? `${company.name}, `
-        : `${company.name}`
-    }  `;
-    productionCompaniesDiv.appendChild(companySpan);
-  });
-
-  bottomDiv.append(productionCompaniesHeading, productionCompaniesDiv);
-
-  const movieDetailsDiv = document.querySelector('#movie-details');
-  movieDetailsDiv.appendChild(div);
-  movieDetailsDiv.appendChild(bottomDiv);
+  document
+    .querySelector(`#${type === 'movie' ? 'movie' : 'show'}-details`)
+    .appendChild(div);
 }
 
 //* Display backdrop on details pages
@@ -193,7 +156,7 @@ function displayBackgroundImage(type, backDropPath) {
 
   type === 'movie'
     ? document.querySelector('#movie-details').appendChild(overlayDiv)
-    : document.querySelector('#tv-details').appendChild(overlayDiv);
+    : document.querySelector('#show-details').appendChild(overlayDiv);
 }
 
 //* Fetch data from TMDB API
@@ -252,11 +215,11 @@ function init() {
       break;
 
     case '/movie-details.html':
-      displayMovieDetails();
+      displayDetails('movie');
       break;
 
     case '/tv-details.html':
-      console.log('tv-details');
+      displayDetails('tv');
       break;
 
     case '/search.html':
