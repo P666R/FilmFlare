@@ -159,6 +159,63 @@ function displayBackgroundImage(type, backDropPath) {
     : document.querySelector('#show-details').appendChild(overlayDiv);
 }
 
+{
+  /* <div class="swiper-slide">
+            <a href="movie-details.html?id=1">
+              <img src="./images/no-image.jpg" alt="Movie Title" />
+            </a>
+            <h4 class="swiper-rating">
+              <i class="fas fa-star text-secondary"></i> 8 / 10
+            </h4>
+          </div> */
+}
+
+//* Display slider movies
+async function displaySlider() {
+  const { results } = await fetchAPIData('movie/now_playing');
+
+  results.forEach((movie) => {
+    const div = document.createElement('div');
+    div.classList.add('swiper-slide');
+
+    div.innerHTML = `
+   <a href="movie-details.html?id=${movie.id}">
+              <img src=https://image.tmdb.org/t/p/w500${movie.poster_path} alt=${movie.title} />
+            </a>
+            <h4 class="swiper-rating">
+              <i class="fas fa-star text-secondary"></i> ${movie.vote_average} / 10
+            </h4>
+    `;
+    document.querySelector('.swiper-wrapper').appendChild(div);
+
+    initSwiper();
+  });
+}
+
+function initSwiper() {
+  new Swiper('.swiper', {
+    slidesPerView: 1,
+    spaceBetween: 30,
+    freeMode: true,
+    loop: true,
+    autoplay: {
+      delay: 4000,
+      disableOnInteraction: false,
+    },
+    breakpoints: {
+      500: {
+        slidesPerView: 2,
+      },
+      700: {
+        slidesPerView: 3,
+      },
+      1200: {
+        slidesPerView: 4,
+      },
+    },
+  });
+}
+
 //* Fetch data from TMDB API
 async function fetchAPIData(endpoint) {
   const API_KEY = '4bfda97b16a7e26755c34b364c88b26a';
@@ -207,6 +264,7 @@ function init() {
   switch (global.currentPage) {
     case '/':
     case '/index.html':
+      displaySlider();
       displayPopularMovies();
       break;
 
