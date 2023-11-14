@@ -58,6 +58,9 @@ async function displayMovieDetails() {
   const movieId = window.location.search.split('=')[1];
   const movie = await fetchAPIData(`movie/${movieId}`);
 
+  //! Overlay for background image
+  displayBackgroundImage('movie', movie.backdrop_path);
+
   const div = document.createElement('div');
   div.classList.add('details-top');
 
@@ -83,7 +86,7 @@ async function displayMovieDetails() {
   starIcon.classList.add('fas', 'fa-star', 'text-primary');
   rating.appendChild(starIcon);
   rating.appendChild(
-    document.createTextNode(`${movie.vote_average.toFixed(1)} / 10`)
+    document.createTextNode(` ${movie.vote_average.toFixed(1)} / 10`)
   );
 
   const releaseDate = document.createElement('p');
@@ -171,6 +174,26 @@ async function displayMovieDetails() {
   const movieDetailsDiv = document.querySelector('#movie-details');
   movieDetailsDiv.appendChild(div);
   movieDetailsDiv.appendChild(bottomDiv);
+}
+
+//* Display backdrop on details pages
+function displayBackgroundImage(type, backDropPath) {
+  const overlayDiv = document.createElement('div');
+  overlayDiv.style.backgroundImage = `url(https://image.tmdb.org/t/p/original/${backDropPath})`;
+  overlayDiv.style.backgroundSize = 'cover';
+  overlayDiv.style.backgroundPosition = 'center';
+  overlayDiv.style.backgroundRepeat = 'no-repeat';
+  overlayDiv.style.height = '100vh';
+  overlayDiv.style.width = '100vw';
+  overlayDiv.style.position = 'absolute';
+  overlayDiv.style.top = '0';
+  overlayDiv.style.left = '0';
+  overlayDiv.style.zIndex = '-1';
+  overlayDiv.style.opacity = '0.15';
+
+  type === 'movie'
+    ? document.querySelector('#movie-details').appendChild(overlayDiv)
+    : document.querySelector('#tv-details').appendChild(overlayDiv);
 }
 
 //* Fetch data from TMDB API
