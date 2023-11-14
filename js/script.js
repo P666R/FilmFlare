@@ -1,5 +1,15 @@
 const global = {
   currentPage: window.location.pathname,
+  search: {
+    term: '',
+    type: '',
+    page: 1,
+    totalPages: 1,
+  },
+  api: {
+    apiKey: '4bfda97b16a7e26755c34b364c88b26a',
+    apiURL: 'https://api.themoviedb.org/3/',
+  },
 };
 
 //* Display popular movies
@@ -159,15 +169,22 @@ function displayBackgroundImage(type, backDropPath) {
     : document.querySelector('#show-details').appendChild(overlayDiv);
 }
 
-{
-  /* <div class="swiper-slide">
-            <a href="movie-details.html?id=1">
-              <img src="./images/no-image.jpg" alt="Movie Title" />
-            </a>
-            <h4 class="swiper-rating">
-              <i class="fas fa-star text-secondary"></i> 8 / 10
-            </h4>
-          </div> */
+//* Search movies/shows
+async function search() {
+  const queryString = window.location.search;
+  //! Params from query string
+  const urlParams = new URLSearchParams(queryString);
+  global.search.term = urlParams.get('search-term').trim();
+  global.search.type = urlParams.get('type');
+
+  if (global.search.term !== '' && global.search.term !== null) {
+    //TODO make request and display results
+    const results = await searchAPIData();
+    console.log(results);
+  } else {
+    console.log(global.search);
+    showAlert('Please enter search term');
+  }
 }
 
 //* Display slider movies
@@ -218,16 +235,28 @@ function initSwiper() {
 
 //* Fetch data from TMDB API
 async function fetchAPIData(endpoint) {
-  const API_KEY = '4bfda97b16a7e26755c34b364c88b26a';
-  const API_URL = 'https://api.themoviedb.org/3/';
+  const API_KEY = global.api.apiKey;
+  const API_URL = global.api.apiURL;
 
   showSpinner();
-
   const response = await fetch(
     `${API_URL}${endpoint}?api_key=${API_KEY}&language=en-IN`
   );
   const data = await response.json();
+  hideSpinner();
+  return data;
+}
 
+//* Search data from TMDB API
+async function searchAPIData() {
+  const API_KEY = global.api.apiKey;
+  const API_URL = global.api.apiURL;
+
+  showSpinner();
+  const response = await fetch(
+    `${API_URL}search/${global.search.type}?api_key=${API_KEY}&language=en-IN&query=${global.search.term}`
+  );
+  const data = await response.json();
   hideSpinner();
   return data;
 }
@@ -253,7 +282,19 @@ function highlightActiveLink() {
   });
 }
 
-//
+//* Show alert
+function showAlert(message, className) {
+  const alertEl = document.createElement('div');
+  alertEl.classList.add('alert', className);
+  alertEl.appendChild(document.createTextNode(message));
+  document.querySelector('#alert').appendChild(alertEl);
+
+  setTimeout(() => {
+    alertEl.remove();
+  }, 3000);
+}
+
+//* Add commas to numbers
 function addCommasToNumber(number) {
   return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
@@ -281,7 +322,7 @@ function init() {
       break;
 
     case '/search.html':
-      console.log('search');
+      search();
       break;
   }
 
